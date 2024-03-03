@@ -26,6 +26,15 @@ class Solver:
         self.propagate_history = {}  # level -> propagate variables list
         self.branching_count = 0
 
+        
+        #Creates the .pbp file and writes the first lines
+        
+        logfile = open(self.filename.replace('cnf', 'pbp'), 'w')
+        print('pseudo-Boolean proof version 2.0', file = logfile)
+        print('f', len(self.cnf), file = logfile)
+        logfile.close()
+        
+        
     def run(self):
         start_time = time.time()
         sat = self.solve()
@@ -33,6 +42,17 @@ class Solver:
         answer = self.output_answer(sat, spent)
         logger.info('Equation is {}, resolved in {:.2f} s'
                     .format('SAT' if sat else 'UNSAT', spent))
+
+        
+        #Removes the .pbp file in case the formula is satisfiable; else writes the last lines of the file
+
+        logname = self.filename.replace('cnf', 'pbp')
+        logfile = open(logname, 'a')
+        if sat: os.remove(logname)
+        else: print('rup >= 1;\noutput NONE\nconclusion UNSAT\nend pseudo-Boolean proof', file = logfile)
+        logfile.close()
+
+        
         return sat, spent, answer
 
     def output_answer(self, sat, time):
@@ -330,6 +350,20 @@ class Solver:
         else:
             level = self.level - 1
 
+        
+        #Adds a RUP step to the .pbp file
+        
+        learntstring = str(learnt)
+        learntstring = learntstring.replace('frozenset(', '')
+        learntstring = learntstring.replace('})', '')
+        learntstring = learntstring.replace('{', '1 x')
+        learntstring = learntstring.replace(', ', ' 1 x')
+        learntstring = learntstring.replace('x-', '~x')
+        logfile = open(self.filename.replace('cnf', 'pbp'), 'a')
+        print('rup', learntstring, '>= 1 ;', file = logfile)
+        logfile.close()
+
+        
         return level, learnt
 
     def backtrack(self, level):
