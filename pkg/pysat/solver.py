@@ -33,6 +33,18 @@ class Solver:
         print('pseudo-Boolean proof version 2.0', file = logfile)
         print('f', len(self.cnf), file = logfile)
         logfile.close()
+
+
+        #Implements the Pure Literals technique (identifies the variables that occur in only one polarity and erases any clause in which they occur)
+
+        for x in self.vars:
+            polarity = set()
+            for y in self.cnf:
+                if x in y: polarity.add(x)
+                if -x in y: polarity.add(-x)
+            if len(polarity) < 2:
+                for y in self.cnf.copy():
+                    if x in y: self.cnf.remove(y)
         
         
     def run(self):
